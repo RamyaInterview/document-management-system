@@ -1,42 +1,43 @@
 package com.sample.app.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sample.app.dto.PostRequest;
-import com.sample.app.service.PostService;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+import com.sample.app.dto.PostRequest;
+import com.sample.app.service.JsonPlaceholderClient;
+
+@RestController
 @RequestMapping("/posts")
 public class PostController {
-	@Autowired
-	private RestTemplate restTemplate;
 
-	@Autowired
-	private PostService postService;
+    private final JsonPlaceholderClient jsonPlaceholderClient;
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostController.class);
 
-	@PostMapping("/create")
-	@ResponseBody
-	public ResponseEntity<String> createPost(@RequestBody PostRequest postRequest) throws JsonProcessingException {
-		String url = "https://jsonplaceholder.typicode.com/posts";
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
+    @Autowired
+    public PostController(JsonPlaceholderClient jsonPlaceholderClient) {
+        this.jsonPlaceholderClient = jsonPlaceholderClient;
+    }
 
-		String body = postRequest.toJsonString();
-
-		HttpEntity<String> requestEntity = new HttpEntity<>(body, headers);
-		ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, requestEntity,
-				String.class);
-		return responseEntity;
-	}
-
-	@GetMapping("/{postId}")
-	public ResponseEntity<String> getPost(@PathVariable Long postId) {
-		return postService.getPost(postId);
-	}
-
+    @PostMapping
+    public ResponseEntity<String> createPost(@RequestBody PostRequest postRequest) {
+    	LOGGER.info("I am running create post service for " +postRequest.getUserId());
+        return jsonPlaceholderClient.createPost(postRequest);
+    }
+    
+    @GetMapping("/{postId}")
+    public ResponseEntity<String> getPost(@PathVariable Long postId) {
+    	LOGGER.info("I am getting post details for document"+postId);
+    	LOGGER.debug("I am at get post");
+        return jsonPlaceholderClient.getPost(postId);
+    }
+    
+	
 }
